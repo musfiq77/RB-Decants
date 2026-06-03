@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0a0a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>RB Decants</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0a;--bg2:#141414;--bg3:#1e1e1e;
+  --border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.15);
+  --text:#f0ede8;--muted:#888;
+  --accent:#c8a96e;--accent2:#e8c98e;
+  --danger:#e05555;--success:#5c9e6a;
+  --radius:14px;--radius-sm:8px;--header-h:64px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{
+  background:var(--bg);
+  background-image: radial-gradient(ellipse at top, rgba(200,169,110,0.06) 0%, transparent 60%),
+                    radial-gradient(ellipse at bottom right, rgba(180,60,60,0.04) 0%, transparent 50%);
+  color:var(--text);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;
+}
+
+/* Header */
+.header{position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.92);border-bottom:0.5px solid var(--border);height:var(--header-h);display:flex;align-items:center;justify-content:space-between;padding:0 20px;backdrop-filter:blur(20px);}
+.cart-pill{background:var(--accent);color:#0a0a0a;border-radius:99px;padding:6px 14px;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:6px;border:none;transition:all 0.2s;position:relative;}
+.cart-pill:active{background:var(--accent2);transform:scale(0.96);}
+.cart-pill svg{width:14px;height:14px;}
+.cart-pill.pulse{animation:cartPulse 0.4s ease;}
+@keyframes cartPulse{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* Tabs */
+.tabs{display:flex;background:rgba(10,10,10,0.92);border-bottom:0.5px solid var(--border);position:sticky;top:var(--header-h);z-index:99;backdrop-filter:blur(20px);}
+.tab{flex:1;padding:13px 8px;text-align:center;font-size:12px;font-weight:400;color:var(--muted);cursor:pointer;border-bottom:1.5px solid transparent;transition:all 0.2s;letter-spacing:0.06em;text-transform:uppercase;border:none;background:none;}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+
+.content{padding:16px 16px 80px;max-width:480px;margin:0 auto;}
+
+/* Search */
+.search-wrap{position:relative;margin-bottom:12px;}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);width:16px;height:16px;}
+.search-input{width:100%;background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px 11px 40px;color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;font-weight:300;outline:none;transition:border-color 0.2s;}
+.search-input::placeholder{color:var(--muted);}
+.search-input:focus{border-color:rgba(200,169,110,0.4);}
+
+/* Filter */
+.filter-row{display:flex;gap:8px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none;}
+.filter-row::-webkit-scrollbar{display:none;}
+.filter-btn{background:var(--bg2);border:0.5px solid var(--border);border-radius:99px;padding:6px 14px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all 0.15s;}
+.filter-btn.active{background:rgba(200,169,110,0.12);border-color:rgba(200,169,110,0.4);color:var(--accent);}
+
+/* Sort & Price row */
+.controls-row{display:flex;gap:8px;margin-bottom:14px;align-items:center;}
+.sort-select{background:var(--bg2);border:0.5px solid var(--border);border-radius:99px;padding:6px 14px;font-size:12px;color:var(--muted);font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none;}
+.sort-select:focus{border-color:rgba(200,169,110,0.4);}
+.price-filter-btn{background:var(--bg2);border:0.5px solid var(--border);border-radius:99px;padding:6px 14px;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap;font-family:'DM Sans',sans-serif;transition:all 0.15s;display:flex;align-items:center;gap:5px;}
+.price-filter-btn.active{background:rgba(200,169,110,0.12);border-color:rgba(200,169,110,0.4);color:var(--accent);}
+
+/* Price range panel */
+.price-panel{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px;display:none;}
+.price-panel.open{display:block;}
+.price-panel label{font-size:11px;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;}
+.price-values{display:flex;justify-content:space-between;margin:8px 0 6px;font-size:13px;color:var(--accent);}
+.price-slider{width:100%;accent-color:var(--accent);cursor:pointer;}
+
+/* Perfume cards */
+.p-card{
+  background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);
+  padding:0;margin-bottom:10px;overflow:hidden;
+  transition:border-color 0.2s,transform 0.2s;
+  animation:cardIn 0.35s ease both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.p-card:hover{border-color:var(--border2);}
+.p-card.out-of-stock{opacity:0.45;}
+.p-card.wished{border-color:rgba(200,169,110,0.35);}
+.p-card.compare-selected{border-color:rgba(92,158,106,0.5);background:rgba(92,158,106,0.05);}
+
+/* Card top row */
+.p-top{display:flex;align-items:stretch;}
+.p-icon{width:64px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(200,169,110,0.06);border-right:0.5px solid var(--border);font-size:28px;}
+.p-main{flex:1;padding:12px 12px 0;}
+.p-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;}
+.p-name{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:400;color:var(--text);letter-spacing:0.01em;line-height:1.3;flex:1;}
+.p-actions{display:flex;gap:6px;flex-shrink:0;}
+.wish-btn,.compare-btn{background:none;border:none;cursor:pointer;padding:4px;border-radius:6px;transition:all 0.15s;color:var(--muted);}
+.wish-btn:hover{color:var(--accent);}
+.wish-btn.active{color:var(--accent);}
+.compare-btn:hover{color:var(--success);}
+.compare-btn.active{color:var(--success);}
+.wish-btn svg,.compare-btn svg{width:16px;height:16px;}
+
+.badges{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px;}
+.badge{font-size:10px;font-weight:500;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;white-space:nowrap;}
+.badge-sale{background:rgba(200,169,110,0.15);color:var(--accent);border:0.5px solid rgba(200,169,110,0.3);}
+.badge-out{background:rgba(224,85,85,0.1);color:var(--danger);border:0.5px solid rgba(224,85,85,0.3);}
+.badge-offer{background:rgba(92,158,106,0.15);color:#7ec98e;border:0.5px solid rgba(92,158,106,0.3);}
+.badge-gender{background:rgba(255,255,255,0.06);color:var(--muted);border:0.5px solid var(--border);}
+
+/* Notes */
+.p-notes-row{padding:0 12px 8px;}
+.notes-toggle{background:none;border:none;color:var(--muted);font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0;letter-spacing:0.04em;}
+.notes-toggle svg{width:12px;height:12px;transition:transform 0.2s;}
+.notes-toggle.open svg{transform:rotate(180deg);}
+.notes-body{display:none;padding-top:8px;border-top:0.5px solid var(--border);margin-top:6px;}
+.notes-body.open{display:block;}
+.notes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.note-col label{font-size:9px;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:4px;}
+.note-col span{font-size:11px;color:var(--text);line-height:1.5;}
+
+/* Size buttons */
+.p-sizes{padding:10px 12px 12px;}
+.size-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.size-btn{background:var(--bg3);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 4px;text-align:center;cursor:pointer;transition:all 0.15s;color:var(--text);font-family:'DM Sans',sans-serif;position:relative;overflow:hidden;}
+.size-btn::after{content:'';position:absolute;inset:0;background:rgba(200,169,110,0.15);opacity:0;transition:opacity 0.15s;}
+.size-btn:active::after{opacity:1;}
+.size-btn:active{transform:scale(0.95);}
+.size-btn:disabled{opacity:0.3;cursor:not-allowed;}
+.size-ml{font-size:12px;font-weight:500;display:block;}
+.size-price{font-size:10px;color:var(--accent);display:block;margin-top:2px;}
+
+/* Compare bar */
+.compare-bar{position:fixed;bottom:0;left:0;right:0;background:var(--bg3);border-top:0.5px solid var(--border2);padding:12px 20px;display:none;align-items:center;justify-content:space-between;z-index:200;backdrop-filter:blur(20px);}
+.compare-bar.visible{display:flex;}
+.compare-info{font-size:13px;color:var(--text);}
+.compare-info span{color:var(--accent);}
+.compare-actions{display:flex;gap:8px;}
+.btn-compare-go{background:var(--accent);color:#0a0a0a;border:none;border-radius:99px;padding:8px 18px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.btn-compare-clear{background:none;border:0.5px solid var(--border);border-radius:99px;padding:8px 14px;font-size:13px;color:var(--muted);cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+/* Compare modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:300;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px);}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:520px;padding:20px;max-height:85vh;overflow-y:auto;}
+.modal-handle{width:40px;height:4px;background:var(--border2);border-radius:99px;margin:0 auto 16px;}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;margin-bottom:16px;color:var(--accent);}
+.compare-table{width:100%;border-collapse:collapse;font-size:13px;}
+.compare-table th{text-align:left;color:var(--muted);font-weight:400;padding:8px 6px;border-bottom:0.5px solid var(--border);font-size:11px;letter-spacing:0.06em;text-transform:uppercase;}
+.compare-table td{padding:8px 6px;border-bottom:0.5px solid var(--border);color:var(--text);}
+.compare-table tr:last-child td{border-bottom:none;}
+.compare-table td:first-child{color:var(--muted);width:35%;}
+.btn-close-modal{width:100%;background:rgba(200,169,110,0.1);border:0.5px solid rgba(200,169,110,0.3);border-radius:var(--radius-sm);padding:12px;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:16px;}
+
+/* Wishlist tab */
+.wish-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.wish-empty svg{width:48px;height:48px;opacity:0.3;display:block;margin:0 auto 16px;}
+.wish-empty p{font-size:14px;}
+
+/* Order tab */
+.order-empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.order-empty svg{width:48px;height:48px;opacity:0.3;display:block;margin:0 auto 16px;}
+.order-empty p{font-size:14px;}
+.order-item{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;animation:cardIn 0.25s ease both;}
+.oi-icon{font-size:20px;flex-shrink:0;}
+.oi-info{flex:1;min-width:0;}
+.oi-name{font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.oi-size{font-size:12px;color:var(--muted);margin-top:2px;}
+.oi-price{font-size:15px;font-weight:500;color:var(--accent);white-space:nowrap;}
+.oi-remove{background:none;border:none;color:var(--muted);cursor:pointer;padding:6px;border-radius:6px;display:flex;align-items:center;flex-shrink:0;}
+.oi-remove:active{color:var(--danger);}
+.oi-remove svg{width:16px;height:16px;}
+
+/* Summary */
+.summary-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;margin-top:12px;}
+.sum-title{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.sum-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--muted);}
+.sum-row:last-of-type{border-bottom:none;}
+.sum-row span:last-child{color:var(--text);}
+.sum-total{display:flex;justify-content:space-between;align-items:baseline;padding-top:12px;margin-top:6px;border-top:0.5px solid var(--border2);}
+.sum-total-label{font-size:14px;color:var(--muted);}
+.sum-total-amt{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--accent);}
+.step-label{font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin:16px 0 8px;}
+.delivery-opts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.delivery-card{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:12px 6px;text-align:center;cursor:pointer;transition:all 0.15s;}
+.delivery-card:active{transform:scale(0.97);}
+.del-label{font-size:10px;color:var(--muted);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;}
+.del-price{font-size:16px;font-weight:500;color:var(--accent);font-family:'Cormorant Garamond',serif;}
+.bill-box{background:var(--bg2);border:0.5px solid var(--border);border-radius:var(--radius);padding:14px;}
+.bb-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:0.5px solid var(--border);font-size:13px;}
+.bb-row:last-child{border-bottom:none;}
+.bb-lbl{color:var(--muted);}
+.bb-val{color:var(--text);font-weight:500;}
+.bb-total-row{padding-top:10px;}
+.bb-total-lbl{font-size:14px;font-weight:500;color:var(--text);}
+.bb-total-val{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--accent);}
+
+/* Buttons */
+.btn-copy{width:100%;background:rgba(200,169,110,0.1);border:0.5px solid rgba(200,169,110,0.3);border-radius:var(--radius-sm);padding:14px;color:var(--accent);font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:10px;display:flex;align-items:center;justify-content:center;gap:6px;font-weight:500;transition:all 0.2s;}
+.btn-copy:active{background:rgba(200,169,110,0.2);}
+.btn-messenger{width:100%;background:rgba(0,132,255,0.12);border:0.5px solid rgba(0,132,255,0.3);border-radius:var(--radius-sm);padding:14px;color:#4a9eff;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:500;transition:all 0.2s;}
+.btn-messenger:active{background:rgba(0,132,255,0.2);}
+.btn-whatsapp{width:100%;background:rgba(37,211,102,0.12);border:0.5px solid rgba(37,211,102,0.3);border-radius:var(--radius-sm);padding:14px;color:#25d366;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:8px;font-weight:500;transition:all 0.2s;}
+.btn-whatsapp:active{background:rgba(37,211,102,0.2);}
+.btn-clear{width:100%;background:none;border:0.5px solid var(--border);border-radius:var(--radius-sm);padding:12px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;margin-top:8px;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-clear:active{border-color:var(--danger);color:var(--danger);}
+.fb-note{font-size:12px;color:var(--muted);text-align:center;margin-top:10px;line-height:1.6;}
+
+/* Toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);border:0.5px solid var(--border2);border-radius:99px;padding:10px 20px;font-size:13px;color:var(--text);opacity:0;transition:all 0.25s;pointer-events:none;white-space:nowrap;z-index:999;display:flex;align-items:center;gap:8px;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.page{display:none;}
+.page.active{display:block;}
+.count-label{font-size:12px;color:var(--muted);margin-bottom:12px;}
+.no-results{text-align:center;padding:40px 0;color:var(--muted);font-size:14px;}
+.footer-note{text-align:center;font-size:11px;color:var(--muted);padding:20px 0 0;line-height:1.8;}
+.price-original{text-decoration:line-through;color:var(--muted);font-size:9px;display:block;}
+.offer-badge-sm{font-size:9px;color:#7ec98e;display:block;margin-top:1px;}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div>
+    <img src="data:image/jpeg;base64,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" alt="RB Decants" style="height:38px;object-fit:contain;"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+    <div style="display:none;font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:400;letter-spacing:0.04em;">RB <span style="color:var(--accent)">Decants</span></div>
+  </div>
+  <button class="cart-pill" id="cart-pill" onclick="goTab('order')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+    <span id="cart-count">0</span>
+  </button>
+</header>
+
+<nav class="tabs">
+  <button class="tab active" onclick="goTab('catalog')" id="tab-catalog">Price List</button>
+  <button class="tab" onclick="goTab('wishlist')" id="tab-wishlist">Wishlist</button>
+  <button class="tab" onclick="goTab('order')" id="tab-order">My Order</button>
+</nav>
+
+<main class="content">
+  <!-- CATALOG -->
+  <div class="page active" id="page-catalog">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input class="search-input" type="text" id="search" placeholder="Search perfumes..." oninput="renderCatalog()" autocomplete="off">
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setFilter('all')" id="f-all">All</button>
+      <button class="filter-btn" onclick="setFilter('available')" id="f-available">Available</button>
+      <button class="filter-btn" onclick="setFilter('sale')" id="f-sale">On Sale</button>
+      <button class="filter-btn" onclick="setFilter('out')" id="f-out">Out of Stock</button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" onclick="setGenderFilter('all')" id="gf-all">All</button>
+      <button class="filter-btn" onclick="setGenderFilter('male')" id="gf-male">Male</button>
+      <button class="filter-btn" onclick="setGenderFilter('female')" id="gf-female">Female</button>
+      <button class="filter-btn" onclick="setGenderFilter('unisex')" id="gf-unisex">Unisex</button>
+    </div>
+    <div class="controls-row">
+      <select class="sort-select" onchange="setSortOrder(this.value)">
+        <option value="name">Sort: A–Z</option>
+        <option value="name-desc">Sort: Z–A</option>
+        <option value="price-asc">Price: Low–High</option>
+        <option value="price-desc">Price: High–Low</option>
+      </select>
+      <button class="price-filter-btn" id="price-btn" onclick="togglePricePanel()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
+        Price Range
+      </button>
+    </div>
+    <div class="price-panel" id="price-panel">
+      <label>Max price (2ml)</label>
+      <div class="price-values"><span>৳0</span><span id="price-val">৳200</span></div>
+      <input type="range" class="price-slider" id="price-slider" min="60" max="200" value="200" step="10" oninput="onPriceSlider(this.value)">
+    </div>
+    <div id="catalog"></div>
+    <div class="footer-note">All prices in BDT · Subject to change without notice</div>
+  </div>
+
+  <!-- WISHLIST -->
+  <div class="page" id="page-wishlist">
+    <div id="wishlist-content"></div>
+  </div>
+
+  <!-- ORDER -->
+  <div class="page" id="page-order">
+    <div id="order-list"></div>
+    <div id="order-summary"></div>
+  </div>
+</main>
+
+<!-- Compare bar -->
+<div class="compare-bar" id="compare-bar">
+  <div class="compare-info">Compare: <span id="compare-count">0</span> selected</div>
+  <div class="compare-actions">
+    <button class="btn-compare-clear" onclick="clearCompare()">Clear</button>
+    <button class="btn-compare-go" onclick="openCompare()">Compare</button>
+  </div>
+</div>
+
+<!-- Compare modal -->
+<div class="modal-overlay" id="compare-modal" onclick="closeCompare(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Side by Side</div>
+    <div id="compare-content"></div>
+    <button class="btn-close-modal" onclick="document.getElementById('compare-modal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✓ Added</div>
+
+<script>
+const SIZES = [2,5,10,15,30];
+let perfumes = [];
+let order = [];
+let wishlist = [];
+let compareList = [];
+let activeFilter = 'all';
+let genderFilter = 'all';
+let sortOrder = 'name';
+let selectedDelivery = 'none';
+let currentGrandTotal = 0;
+let maxPrice2ml = 200;
+let pricePanelOpen = false;
+
+// ── Perfume icons ─────────────────────────────────────────────────────────────
+const ICONS = ['🌸','🌿','🌊','🏔️','🍋','🌹','🌙','⭐','🔥','💎','🌺','🍃','✨','🌴','🎵','🌾','🍊','💫','🌼','🦁','🐆','🦋','🌙','🌸','🌊','🍋','🔮','🌿','🌴','🏵️','🌑','⚡','🌟'];
+
+// ── Notes data ────────────────────────────────────────────────────────────────
+const NOTES = {
+  1:  {top:'Mint, Grapefruit', mid:'Aquatic, Violet', base:'Musk, Ambergris'},
+  2:  {top:'Pineapple, Coconut', mid:'Jasmine, Hibiscus', base:'Sandalwood, Musk'},
+  3:  {top:'Bergamot, Lemon', mid:'Rose, Jasmine', base:'Oud, Amber'},
+  4:  {top:'Citrus, Aquatic', mid:'Floral, Mint', base:'Cedarwood, Musk'},
+  5:  {top:'Black Pepper, Mint', mid:'Geranium, Lavender', base:'Musk, Ambergris'},
+  6:  {top:'Apple, Citrus', mid:'Aquatic, Lotus', base:'Cedarwood, Oakmoss'},
+  7:  {top:'Citrus, Bergamot', mid:'Floral, Spice', base:'Oud, Amber, Musk'},
+  8:  {top:'Citrus, Floral', mid:'Rose, Jasmine', base:'Musk, Sandalwood'},
+  9:  {top:'Bergamot, Pepper', mid:'Leather, Violet', base:'Musk, Vetiver'},
+  10: {top:'Black Pepper, Citrus', mid:'Incense, Leather', base:'Oud, Amber'},
+  11: {top:'Bergamot, Mint', mid:'Geranium, Spice', base:'Amber, Musk'},
+  12: {top:'Citrus, Lavender', mid:'Rose, Violet', base:'Musk, Vanilla'},
+  13: {top:'Grapefruit, Mint', mid:'Aquatic, Violet', base:'Musk, Ambergris'},
+  14: {top:'Bergamot, Saffron', mid:'Rose, Oud', base:'Musk, Amber, Sandalwood'},
+  15: {top:'Bergamot, Citrus', mid:'Floral, Spice', base:'Sandalwood, Musk'},
+  16: {top:'Dark Spices, Pepper', mid:'Oud, Leather', base:'Amber, Musk'},
+  17: {top:'Bergamot, Cardamom', mid:'Rose, Jasmine, Oud', base:'Amber, Musk'},
+  18: {top:'Mint, Citrus', mid:'Geranium, Aquatic', base:'Musk, Ambergris'},
+  19: {top:'Saffron, Rose', mid:'Oud, Patchouli', base:'Amber, Musk'},
+  20: {top:'Bergamot, Saffron', mid:'Rose, Oud', base:'Sandalwood, Amber'},
+  22: {top:'Bergamot, Peach', mid:'Rose, Lily', base:'Musk, Amber, Vanilla'},
+  23: {top:'Bergamot, Floral', mid:'Rose, Jasmine', base:'Musk, Sandalwood'},
+  24: {top:'Peach, Berry', mid:'Rose, Jasmine', base:'Musk, Vanilla'},
+  25: {top:'Citrus, Fresh', mid:'Aquatic, Floral', base:'Musk, Cedarwood'},
+  26: {top:'Bergamot, Citrus', mid:'Aquatic, Violet', base:'Musk, Ambergris'},
+  27: {top:'Bergamot, Saffron', mid:'Rose, Oud', base:'Amber, Musk, Sandalwood'},
+  28: {top:'Bergamot, Spice', mid:'Geranium, Pepper', base:'Amber, Musk'},
+  29: {top:'Citrus, Coconut', mid:'Floral, Aquatic', base:'Musk, Sandalwood'},
+  30: {top:'Bergamot, Floral', mid:'Rose, Jasmine', base:'Musk, Amber'},
+  31: {top:'Blackcurrant, Grapefruit', mid:'Birch, Geranium', base:'Ambergris, Musk'},
+  32: {top:'Grapefruit, Bergamot', mid:'Cardamom, Iris', base:'Musk, Vetiver'},
+  33: {top:'Saffron, Floral', mid:'Rose, Oud', base:'Amber, Musk'}
+};
+
+// ── Static perfume data ───────────────────────────────────────────────────────
+const PERFUMES_DATA = [
+  {id:1,  name:"Hawas Ice",               prices:{2:100,5:260,10:440,15:640,30:1320},  out:false, sale:false, offer:null, gender:"male"},
+  {id:2,  name:"Rayhaan Tropical Vibe",   prices:{2:80, 5:180,10:340,15:480,30:1000},  out:false, sale:false, offer:null, gender:"male"},
+  {id:3,  name:"Supremacy Collector's",   prices:{2:200,5:460,10:820,15:1180,30:2480}, out:false, sale:false, offer:null, gender:"male"},
+  {id:4,  name:"Rayhaan Aquatica",        prices:{2:80, 5:180,10:340,15:480,30:1000},  out:false, sale:false, offer:null, gender:"male"},
+  {id:5,  name:"Hawas Black",             prices:{2:100,5:240,10:420,15:600,30:1240},  out:false, sale:false, offer:null, gender:"male"},
+  {id:6,  name:"Nautica Voyage",          prices:{2:80, 5:180,10:340,15:480,30:1000},  out:false, sale:false, offer:null, gender:"male"},
+  {id:7,  name:"Atlantis Extrait",        prices:{2:140,5:300,10:540,15:780,30:1620},  out:false, sale:false, offer:null, gender:"male"},
+  {id:8,  name:"Naseem",                  prices:{2:80, 5:180,10:320,15:460,30:960},   out:false, sale:false, offer:null, gender:"male"},
+  {id:9,  name:"Rayhaan Wolf",            prices:{2:80, 5:180,10:340,15:460,30:1000},  out:false, sale:false, offer:null, gender:"male"},
+  {id:10, name:"Rayhaan Obsidian",        prices:{2:80, 5:180,10:340,15:480,30:1000},  out:false, sale:false, offer:null, gender:"male"},
+  {id:11, name:"Rayhaan Lion",            prices:{2:80, 5:180,10:340,15:480,30:1000},  out:false, sale:false, offer:null, gender:"male"},
+  {id:12, name:"Lattafa Qaed Al Fursan",  prices:{2:60, 5:160,10:260,15:380,30:800},   out:false, sale:false, offer:null, gender:"male"},
+  {id:13, name:"Hawas Kobra",             prices:{2:100,5:240,10:420,15:600,30:1240},  out:false, sale:false, offer:null, gender:"male"},
+  {id:14, name:"Rasasi Fattan",           prices:{2:120,5:300,10:540,15:780,30:1620},  out:false, sale:false, offer:null, gender:"male"},
+  {id:15, name:"Rayhaan Italia",          prices:{2:80, 5:180,10:340,15:480,30:1000},  out:false, sale:false, offer:null, gender:"male"},
+  {id:16, name:"Rayhaan Nocturno Elixir", prices:{2:80, 5:180,10:340,15:480,30:1000},  out:false, sale:false, offer:null, gender:"male"},
+  {id:17, name:"Lattafa Dynasty",         prices:{2:120,5:280,10:480,15:700,30:1460},  out:false, sale:false, offer:null, gender:"male"},
+  {id:18, name:"Hawas For Him",           prices:{2:100,5:240,10:420,15:600,30:1240},  out:false, sale:false, offer:null, gender:"male"},
+  {id:19, name:"Kaaf",                    prices:{2:120,5:260,10:460,15:660,30:1380},  out:false, sale:false, offer:null, gender:"male"},
+  {id:20, name:"Lattafa Asad",            prices:{2:80, 5:200,10:360,15:500,30:1060},  out:false, sale:false, offer:null, gender:"male"},
+  {id:22, name:"Lattafa Yara",            prices:{2:80, 5:200,10:360,15:520,30:1060},  out:false, sale:false, offer:null, gender:"female"},
+  {id:23, name:"Lattafa Angham",          prices:{2:100,5:240,10:420,15:600,30:1260},  out:false, sale:false, offer:null, gender:"female"},
+  {id:24, name:"Hawas Diva",              prices:{2:100,5:240,10:420,15:600,30:1260},  out:false, sale:false, offer:null, gender:"female"},
+  {id:25, name:"Blue by Ahmed",           prices:{2:80, 5:180,10:340,15:480,30:1000},  out:false, sale:false, offer:null, gender:"male"},
+  {id:26, name:"Zenith Blue",             prices:{2:120,5:280,10:500,15:720,30:1500},  out:false, sale:false, offer:null, gender:"male"},
+  {id:27, name:"Aether Extrait",          prices:{2:140,5:300,10:540,15:780,30:1620},  out:false, sale:false, offer:null, gender:"male"},
+  {id:28, name:"Hawas Fire",              prices:{2:120,5:280,10:500,15:740,30:1540},  out:false, sale:false, offer:null, gender:"male"},
+  {id:29, name:"Khadlaj Island",          prices:{2:100,5:220,10:400,15:580,30:1200},  out:false, sale:false, offer:null, gender:"unisex"},
+  {id:30, name:"Khadlaj Dreams",          prices:{2:100,5:220,10:400,15:580,30:1200},  out:false, sale:false, offer:null, gender:"unisex"},
+  {id:31, name:"Club de Nuit EDT",        prices:{2:120,5:280,10:480,15:700,30:1460},  out:false, sale:false, offer:null, gender:"male"},
+  {id:32, name:"JPG Le Beau EDT",         prices:{2:200,5:480,10:860,15:1220,30:2580}, out:false, sale:false, offer:null, gender:"male"},
+  {id:33, name:"Lattafa Opulent Dubai",   prices:{2:80, 5:160,10:280,15:400,30:840},   out:false, sale:false, offer:null, gender:"unisex"}
+];
+
+const GH_API = 'https://raw.githubusercontent.com/rb-decants/rb-decants/main/perfumes.json';
+
+function parsePerfumes(data) {
+  return data.map(p => ({
+    ...p,
+    prices:{2:p.prices['2']||p.prices[2]||0, 5:p.prices['5']||p.prices[5]||0, 10:p.prices['10']||p.prices[10]||0, 15:p.prices['15']||p.prices[15]||0, 30:p.prices['30']||p.prices[30]||0},
+    offer: p.offer ? {pct:p.offer.pct||{}, manual:p.offer.manual||{}} : null,
+    gender: p.gender || 'male'
+  }));
+}
+
+async function loadPerfumes() {
+  try {
+    const r = await fetch(GH_API + '?t=' + Date.now());
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    perfumes = parsePerfumes(data);
+    console.log('✅ Loaded from API:', perfumes.length, 'perfumes');
+  } catch(e) {
+    console.warn('⚠️ API failed, using built-in data:', e.message);
+    perfumes = parsePerfumes(PERFUMES_DATA);
+  }
+  renderCatalog();
+}
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+function goTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('page-' + name).classList.add('active');
+  if (name === 'order') renderOrder();
+  if (name === 'wishlist') renderWishlist();
+}
+
+// ── Filters ───────────────────────────────────────────────────────────────────
+function setFilter(f) {
+  activeFilter = f;
+  document.querySelectorAll('#f-all,#f-available,#f-sale,#f-out').forEach(b => b.classList.remove('active'));
+  document.getElementById('f-' + f).classList.add('active');
+  renderCatalog();
+}
+function setGenderFilter(g) {
+  genderFilter = g;
+  ['all','male','female','unisex'].forEach(f => {
+    const b = document.getElementById('gf-' + f);
+    if (b) b.classList.toggle('active', f === g);
+  });
+  renderCatalog();
+}
+function setSortOrder(v) { sortOrder = v; renderCatalog(); }
+function togglePricePanel() {
+  pricePanelOpen = !pricePanelOpen;
+  document.getElementById('price-panel').classList.toggle('open', pricePanelOpen);
+  document.getElementById('price-btn').classList.toggle('active', pricePanelOpen);
+}
+function onPriceSlider(v) {
+  maxPrice2ml = parseInt(v);
+  document.getElementById('price-val').textContent = '৳' + v;
+  renderCatalog();
+}
+
+// ── Catalog render ────────────────────────────────────────────────────────────
+function renderCatalog() {
+  const q = (document.getElementById('search').value || '').toLowerCase();
+  let list = [...perfumes];
+  if (q) list = list.filter(p => p.name.toLowerCase().includes(q));
+  if (activeFilter === 'available') list = list.filter(p => !p.out);
+  if (activeFilter === 'sale') list = list.filter(p => p.sale);
+  if (activeFilter === 'out') list = list.filter(p => p.out);
+  if (genderFilter !== 'all') list = list.filter(p => (p.gender||'male') === genderFilter);
+  list = list.filter(p => p.prices[2] <= maxPrice2ml);
+  list.sort((a,b) => {
+    if (sortOrder === 'name') return a.name.localeCompare(b.name);
+    if (sortOrder === 'name-desc') return b.name.localeCompare(a.name);
+    if (sortOrder === 'price-asc') return a.prices[2] - b.prices[2];
+    if (sortOrder === 'price-desc') return b.prices[2] - a.prices[2];
+    return 0;
+  });
+  const el = document.getElementById('catalog');
+  if (!list.length) { el.innerHTML = '<div class="no-results">No perfumes found</div>'; return; }
+
+  const genderLabel = {male:'Male',female:'Female',unisex:'Unisex'};
+  el.innerHTML = '<div class="count-label">' + list.length + ' perfume' + (list.length!==1?'s':'') + '</div>' +
+    list.map((p, idx) => {
+      const icon = ICONS[p.id % ICONS.length] || '🌸';
+      const wished = wishlist.includes(p.id);
+      const compared = compareList.includes(p.id);
+      const notes = NOTES[p.id];
+      const badges = [
+        p.offer ? '<span class="badge badge-offer">' + offerBadgeText(p) + '</span>' : '',
+        p.sale ? '<span class="badge badge-sale">Sale</span>' : '',
+        p.out ? '<span class="badge badge-out">Out of Stock</span>' : '',
+        '<span class="badge badge-gender">' + (genderLabel[p.gender]||'Male') + '</span>'
+      ].join('');
+      const btns = SIZES.map(s => {
+        const pr = p.prices[s]; if (!pr) return '<div></div>';
+        return '<button class="size-btn" onclick="addToOrder(' + p.id + ',' + s + ')"' + (p.out?' disabled':'') + '>' +
+          '<span class="size-ml">' + s + 'ml</span>' +
+          '<span class="size-price">৳' + pr.toLocaleString() + '</span>' +
+          '</button>';
+      }).join('');
+      const notesHtml = notes ? '<div class="p-notes-row"><button class="notes-toggle" id="nt-'+p.id+'" onclick="toggleNotes('+p.id+')">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m6 9 6 6 6-6"/></svg>Notes' +
+        '</button><div class="notes-body" id="nb-'+p.id+'">' +
+        '<div class="notes-grid">' +
+        '<div class="note-col"><label>Top</label><span>' + notes.top + '</span></div>' +
+        '<div class="note-col"><label>Heart</label><span>' + notes.mid + '</span></div>' +
+        '<div class="note-col"><label>Base</label><span>' + notes.base + '</span></div>' +
+        '</div></div></div>' : '';
+      return '<div class="p-card' + (p.out?' out-of-stock':'') + (wished?' wished':'') + (compared?' compare-selected':'') + '" id="card-'+p.id+'" style="animation-delay:'+((idx%8)*0.04)+'s">' +
+        '<div class="p-top">' +
+        '<div class="p-icon">' + icon + '</div>' +
+        '<div class="p-main">' +
+        '<div class="p-header">' +
+        '<div class="p-name">' + esc(p.name) + '</div>' +
+        '<div class="p-actions">' +
+        '<button class="wish-btn' + (wished?' active':'') + '" onclick="toggleWish('+p.id+')" title="Wishlist">' +
+        '<svg viewBox="0 0 24 24" fill="' + (wished?'currentColor':'none') + '" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+        '</button>' +
+        '<button class="compare-btn' + (compared?' active':'') + '" onclick="toggleCompare('+p.id+')" title="Compare">' +
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>' +
+        '</button>' +
+        '</div></div>' +
+        '<div class="badges">' + badges + '</div>' +
+        '</div></div>' +
+        notesHtml +
+        '<div class="p-sizes"><div class="size-grid">' + btns + '</div></div>' +
+        '</div>';
+    }).join('');
+}
+
+// ── Notes toggle ──────────────────────────────────────────────────────────────
+function toggleNotes(id) {
+  const btn = document.getElementById('nt-' + id);
+  const body = document.getElementById('nb-' + id);
+  btn.classList.toggle('open');
+  body.classList.toggle('open');
+}
+
+// ── Wishlist ──────────────────────────────────────────────────────────────────
+function toggleWish(pid) {
+  const idx = wishlist.indexOf(pid);
+  if (idx === -1) { wishlist.push(pid); showToast('❤️ Added to Wishlist'); }
+  else { wishlist.splice(idx, 1); showToast('Removed from Wishlist'); }
+  const card = document.getElementById('card-' + pid);
+  if (card) card.classList.toggle('wished', wishlist.includes(pid));
+  const btn = card ? card.querySelector('.wish-btn') : null;
+  if (btn) {
+    btn.classList.toggle('active', wishlist.includes(pid));
+    btn.querySelector('svg').setAttribute('fill', wishlist.includes(pid) ? 'currentColor' : 'none');
+  }
+  if (document.getElementById('page-wishlist').classList.contains('active')) renderWishlist();
+}
+
+function renderWishlist() {
+  const el = document.getElementById('wishlist-content');
+  if (!wishlist.length) {
+    el.innerHTML = '<div class="wish-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg><p>No wishlist items.<br>Tap ♥ on any perfume.</p></div>';
+    return;
+  }
+  const list = perfumes.filter(p => wishlist.includes(p.id)).sort((a,b)=>a.name.localeCompare(b.name));
+  const genderLabel = {male:'Male',female:'Female',unisex:'Unisex'};
+  el.innerHTML = '<div class="count-label">' + list.length + ' saved</div>' +
+    list.map((p,idx) => {
+      const icon = ICONS[p.id % ICONS.length] || '🌸';
+      const btns = SIZES.map(s => {
+        const pr = p.prices[s]; if (!pr) return '<div></div>';
+        return '<button class="size-btn" onclick="addToOrder(' + p.id + ',' + s + ')"' + (p.out?' disabled':'') + '>' +
+          '<span class="size-ml">' + s + 'ml</span><span class="size-price">৳' + pr.toLocaleString() + '</span></button>';
+      }).join('');
+      return '<div class="p-card" style="animation-delay:'+((idx)*0.05)+'s">' +
+        '<div class="p-top">' +
+        '<div class="p-icon">' + icon + '</div>' +
+        '<div class="p-main">' +
+        '<div class="p-header"><div class="p-name">' + esc(p.name) + '</div>' +
+        '<div class="p-actions"><button class="wish-btn active" onclick="toggleWish('+p.id+')" title="Remove">' +
+        '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>' +
+        '</button></div></div>' +
+        '<div class="badges"><span class="badge badge-gender">' + (genderLabel[p.gender]||'Male') + '</span></div>' +
+        '</div></div>' +
+        '<div class="p-sizes"><div class="size-grid">' + btns + '</div></div>' +
+        '</div>';
+    }).join('');
+}
+
+// ── Compare ───────────────────────────────────────────────────────────────────
+function toggleCompare(pid) {
+  const idx = compareList.indexOf(pid);
+  if (idx === -1) {
+    if (compareList.length >= 3) { showToast('Max 3 to compare'); return; }
+    compareList.push(pid);
+  } else { compareList.splice(idx, 1); }
+  const card = document.getElementById('card-' + pid);
+  if (card) card.classList.toggle('compare-selected', compareList.includes(pid));
+  const btn = card ? card.querySelector('.compare-btn') : null;
+  if (btn) btn.classList.toggle('active', compareList.includes(pid));
+  document.getElementById('compare-count').textContent = compareList.length;
+  document.getElementById('compare-bar').classList.toggle('visible', compareList.length >= 2);
+}
+function clearCompare() {
+  compareList.forEach(pid => {
+    const card = document.getElementById('card-' + pid);
+    if (card) { card.classList.remove('compare-selected'); card.querySelector('.compare-btn')?.classList.remove('active'); }
+  });
+  compareList = [];
+  document.getElementById('compare-bar').classList.remove('visible');
+}
+function openCompare() {
+  const list = perfumes.filter(p => compareList.includes(p.id));
+  if (list.length < 2) return;
+  const notes = id => NOTES[id] || {top:'—',mid:'—',base:'—'};
+  const th = '<th>Attribute</th>' + list.map(p => '<th>' + esc(p.name) + '</th>').join('');
+  const row = (label, fn) => '<tr><td>' + label + '</td>' + list.map(p => '<td>' + fn(p) + '</td>').join('') + '</tr>';
+  document.getElementById('compare-content').innerHTML =
+    '<table class="compare-table"><thead><tr>' + th + '</tr></thead><tbody>' +
+    row('Gender', p => ({male:'Male',female:'Female',unisex:'Unisex'}[p.gender]||'Male')) +
+    row('2ml', p => '৳' + p.prices[2]) +
+    row('5ml', p => '৳' + p.prices[5]) +
+    row('10ml', p => '৳' + p.prices[10]) +
+    row('15ml', p => '৳' + p.prices[15]) +
+    row('30ml', p => '৳' + p.prices[30]) +
+    row('Top Notes', p => notes(p.id).top) +
+    row('Heart', p => notes(p.id).mid) +
+    row('Base', p => notes(p.id).base) +
+    '</tbody></table>';
+  document.getElementById('compare-modal').classList.add('open');
+}
+function closeCompare(e) {
+  if (e.target === document.getElementById('compare-modal')) document.getElementById('compare-modal').classList.remove('open');
+}
+
+// ── Order ─────────────────────────────────────────────────────────────────────
+function addToOrder(pid, size) {
+  const p = perfumes.find(x => x.id === pid);
+  if (!p || p.out) return;
+  order.push({pid, size, price: effectivePrice(p, size), name: p.name});
+  updateBadge();
+  const pill = document.getElementById('cart-pill');
+  pill.classList.remove('pulse');
+  void pill.offsetWidth;
+  pill.classList.add('pulse');
+  showToast('✓ ' + p.name.split(' ')[0] + ' ' + size + 'ml added');
+}
+function removeFromOrder(idx) { order.splice(idx, 1); updateBadge(); renderOrder(); }
+function clearOrder() { order = []; selectedDelivery = 'none'; updateBadge(); renderOrder(); }
+function updateBadge() { document.getElementById('cart-count').textContent = order.length; }
+
+function selectDelivery(type) {
+  selectedDelivery = type;
+  ['none','inside','outside'].forEach(t => {
+    const c = document.getElementById('del-' + t);
+    if (c) c.style.borderColor = t === type ? 'var(--accent)' : 'var(--border)';
+  });
+  recalc();
+}
+function recalc() {
+  const pt = order.reduce((s,o) => s + o.price, 0);
+  const delAmt = selectedDelivery==='inside'?85:selectedDelivery==='outside'?125:0;
+  currentGrandTotal = pt + delAmt;
+  const dr = document.getElementById('bb-del-row');
+  if (dr) { dr.style.display = delAmt > 0 ? 'flex' : 'none'; if(delAmt>0){document.getElementById('bb-del-lbl').textContent=selectedDelivery==='inside'?'Inside Dhaka':'Outside Dhaka';document.getElementById('bb-del-val').textContent='৳'+delAmt;} }
+  const bt = document.getElementById('bb-total'); if (bt) bt.textContent = '৳' + currentGrandTotal.toLocaleString();
+}
+
+function renderOrder() {
+  const listEl = document.getElementById('order-list');
+  const sumEl = document.getElementById('order-summary');
+  if (!order.length) {
+    listEl.innerHTML = '<div class="order-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><p>No items yet.<br>Go to Price List to add.</p></div>';
+    sumEl.innerHTML = ''; return;
+  }
+  listEl.innerHTML = order.map((o,i) => {
+    const icon = ICONS[(o.pid) % ICONS.length] || '🌸';
+    return '<div class="order-item">' +
+      '<div class="oi-icon">' + icon + '</div>' +
+      '<div class="oi-info"><div class="oi-name">' + esc(o.name) + '</div><div class="oi-size">' + o.size + ' ml</div></div>' +
+      '<div class="oi-price">৳' + o.price.toLocaleString() + '</div>' +
+      '<button class="oi-remove" onclick="removeFromOrder(' + i + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg></button>' +
+      '</div>';
+  }).join('');
+  const pt = order.reduce((s,o) => s + o.price, 0);
+  const totalMl = order.reduce((s,o) => s + o.size, 0);
+  currentGrandTotal = pt;
+  const map = {};
+  order.forEach(o => { const k=o.pid+'-'+o.size; if(!map[k]) map[k]={name:o.name,size:o.size,price:o.price,qty:0}; map[k].qty++; });
+  const itemRows = Object.values(map).map(g => '<div class="sum-row"><span>' + esc(g.name) + ' ' + g.size + 'ml' + (g.qty>1?' x'+g.qty:'') + '</span><span>৳' + (g.price*g.qty).toLocaleString() + '</span></div>').join('');
+  sumEl.innerHTML =
+    '<div class="summary-box"><div class="sum-title">Items</div>' + itemRows +
+    '<div class="sum-total"><span class="sum-total-label">' + order.length + ' item' + (order.length!==1?'s':'') + ' — ' + totalMl + 'ml</span><span class="sum-total-amt">৳' + pt.toLocaleString() + '</span></div></div>' +
+    '<div class="step-label">Delivery</div>' +
+    '<div class="delivery-opts">' +
+    '<div class="delivery-card" id="del-none" onclick="selectDelivery(\'none\')" style="border-color:var(--accent);"><div class="del-label">No Delivery</div><div class="del-price">৳0</div></div>' +
+    '<div class="delivery-card" id="del-inside" onclick="selectDelivery(\'inside\')"><div class="del-label">Inside Dhaka</div><div class="del-price">৳85</div></div>' +
+    '<div class="delivery-card" id="del-outside" onclick="selectDelivery(\'outside\')"><div class="del-label">Outside Dhaka</div><div class="del-price">৳125</div></div>' +
+    '</div>' +
+    '<div class="step-label">Bill</div>' +
+    '<div class="bill-box">' +
+    '<div class="bb-row"><span class="bb-lbl">Perfume Total</span><span class="bb-val">৳' + pt.toLocaleString() + '</span></div>' +
+    '<div class="bb-row" id="bb-del-row" style="display:none;"><span class="bb-lbl" id="bb-del-lbl">Delivery</span><span class="bb-val" id="bb-del-val">—</span></div>' +
+    '<div class="bb-row bb-total-row"><span class="bb-total-lbl">Total Bill</span><span class="bb-total-val" id="bb-total">৳' + pt.toLocaleString() + '</span></div>' +
+    '</div>' +
+    '<div class="step-label">Send Your Order</div>' +
+    '<button class="btn-copy" onclick="copyOrder()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>Copy Order Summary</button>' +
+    '<button class="btn-whatsapp" onclick="sendToWhatsApp()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/></svg>Send via WhatsApp</button>' +
+    '<button class="btn-messenger" onclick="sendToMessenger()"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.145 2 11.243c0 2.872 1.397 5.444 3.59 7.14V22l3.268-1.793c.872.242 1.797.372 2.742.372 5.523 0 10-4.145 10-9.243C22 6.145 17.523 2 12 2zm1.018 12.443l-2.545-2.714-4.97 2.714 5.467-5.801 2.608 2.714 4.908-2.714-5.468 5.801z"/></svg>Send to Messenger</button>' +
+    '<p class="fb-note">Copy your order and send it to us via WhatsApp or Messenger.</p>' +
+    '<button class="btn-clear" onclick="clearOrder()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>Start Over</button>';
+  selectedDelivery = 'none';
+  setTimeout(recalc, 0);
+}
+
+// ── Share ─────────────────────────────────────────────────────────────────────
+function buildOrderText() {
+  const map = {};
+  order.forEach(o => { const k=o.pid+'-'+o.size; if(!map[k]) map[k]={name:o.name,size:o.size,price:o.price,qty:0}; map[k].qty++; });
+  const lines = Object.values(map).map(g => '• ' + g.name + ' ' + g.size + 'ml' + (g.qty>1?' x'+g.qty:'') + ' — ৳' + (g.price*g.qty).toLocaleString());
+  const pt = order.reduce((s,o) => s+o.price, 0);
+  const delAmt = selectedDelivery==='inside'?85:selectedDelivery==='outside'?125:0;
+  const grandTotal = pt + delAmt;
+  const delLine = delAmt > 0 ? '\nDelivery (' + (selectedDelivery==='inside'?'Inside Dhaka':'Outside Dhaka') + '): ৳' + delAmt : '';
+  return 'RB Decants Order\n\n' + lines.join('\n') + '\n\nPerfume Total: ৳' + pt.toLocaleString() + delLine + '\n\nTotal Bill: ৳' + grandTotal.toLocaleString();
+}
+function copyOrder() {
+  if (!order.length) return;
+  navigator.clipboard.writeText(buildOrderText()).then(() => showToast('✓ Copied!')).catch(() => showToast('Could not copy'));
+}
+function sendToWhatsApp() {
+  const text = buildOrderText();
+  navigator.clipboard?.writeText(text).catch(()=>{});
+  window.open('https://wa.me/+8801540573608?text=' + encodeURIComponent(text), '_blank');
+  showToast('Opening WhatsApp...');
+}
+function sendToMessenger() {
+  const text = buildOrderText();
+  navigator.clipboard?.writeText(text).finally(() => window.open('https://m.me/fragranzabangladesh', '_blank'));
+  showToast('Opening Messenger...');
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function effectivePrice(p, size) {
+  if (!p.offer) return p.prices[size];
+  const s = String(size);
+  if (p.offer.pct && p.offer.pct[s]) return Math.round(p.prices[size] * (1 - p.offer.pct[s]/100));
+  if (p.offer.manual && p.offer.manual[s]) return p.offer.manual[s];
+  return p.prices[size];
+}
+function offerBadgeText(p) {
+  if (!p.offer) return '';
+  const pcts = p.offer.pct ? Object.values(p.offer.pct).filter(v=>v>0) : [];
+  if (pcts.length) { const u=[...new Set(pcts)]; return u.length===1?u[0]+'% OFF':'OFFER'; }
+  return 'SPECIAL';
+}
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+loadPerfumes();
+</script>
+</body>
+</html>
