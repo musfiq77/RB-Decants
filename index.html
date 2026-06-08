@@ -724,12 +724,12 @@ function copyOrder() {
 function sendToWhatsApp() {
   const text = buildOrderText();
   navigator.clipboard?.writeText(text).catch(()=>{});
-  window.open('https://wa.me/+8801540573608?text=' + encodeURIComponent(text), '_blank');
+    window.open('https://wa.me/+8801540-573608?text=' + encodeURIComponent(text), '_blank');
   showToast('Opening WhatsApp...');
 }
 function sendToMessenger() {
   const text = buildOrderText();
-  navigator.clipboard?.writeText(text).finally(() => window.open('https://m.me/fragranzabangladesh', '_blank'));
+    navigator.clipboard?.writeText(text).finally(() => window.open('https://m.me/61583485628108', '_blank'));
   showToast('Opening Messenger...');
 }
 
